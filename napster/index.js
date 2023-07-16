@@ -89,11 +89,13 @@ napster.prototype.saveNapsterAccount = async function (data) {
     self.config.set('email', data['email']);
     self.config.set('password', data['password']);
 
+    /*
     if ((await self.login(data['email'], data['password']))) {
         self.commandRouter.pushToastMessage('success', "Logged in", 'Successfully logged in to Napster');
     } else {
         self.commandRouter.pushToastMessage('error', "Error", 'Could not log in to Napster');
-    }
+    } */
+    await self.login(data['email'], data['password']);
     defer.resolve();
 
     return defer.promise;
