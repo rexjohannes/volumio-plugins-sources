@@ -74,7 +74,7 @@ napster.prototype.getUIConfig = function () {
     return defer.promise;
 };
 
-napster.prototype.configSaveAccountSettings = function (data) {
+napster.prototype.saveNapsterAccount = function (data) {
     const self = this;
     const defer = libQ.defer();
 
