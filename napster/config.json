@@ -1,3 +1,14 @@
 {
- 
+  "enabled": {
+    "type": "boolean",
+    "value": false
+  },
+  "email": {
+    "type": "string",
+    "value": ""
+  },
+  "password": {
+    "type": "string",
+    "value": ""
+  }
 }

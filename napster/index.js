@@ -70,7 +70,8 @@ napster.prototype.getUIConfig = function() {
         __dirname + '/UIConfig.json')
         .then(function(uiconf)
         {
-
+			uiconf.sections[0].content[0].value.value = self.config.get('email');
+			uiconf.sections[0].content[1].value.value = self.config.get('password');
 
             defer.resolve(uiconf);
         })
@@ -80,6 +81,38 @@ napster.prototype.getUIConfig = function() {
         });
 
     return defer.promise;
+};
+
+napster.prototype.configSaveAccountSettings = function(data) {
+	var self = this;
+	var defer = libQ.defer();
+
+	self.config.set('email', data['email']);
+	self.config.set('password', data['password']);
+
+	self.rebuildNapsterConfigFile = function () {
+		var defer = libQ.defer();
+		var napsterConfig = {
+			"email": self.config.get('email'),
+			"password": self.config.get('password')
+		};
+		fs.writeJson('/data/configuration/music_service/napster/config.json', napsterConfig, function (err) {
+			if (err)
+				defer.reject(new Error(err));
+			else defer.resolve();
+		});
+		return defer.promise;
+	};
+	self.rebuildNapsterConfigFile()
+	.then(function(e) {
+		self.commandRouter.pushToastMessage('success', "Configuration update", 'The configuration has been successfully updated');
+		defer.resolve({});
+	})
+	.fail(function(e) {
+		defer.reject(new Error());
+	});
+
+	return defer.promise;
 };
 
 napster.prototype.getConfigurationFiles = function() {
@@ -94,11 +127,13 @@ napster.prototype.setUIConfig = function(data) {
 napster.prototype.getConf = function(varName) {
 	var self = this;
 	//Perform your installation tasks here
+	return self.config.get(varName);
 };
 
 napster.prototype.setConf = function(varName, varValue) {
 	var self = this;
 	//Perform your installation tasks here
+	return self.config.set(varName, varValue);
 };
 
 

@@ -3,5 +3,37 @@
     "label": "TRANSLATE.PLUGIN_CONFIGURATION"
   },
   "sections": [
+    {
+      "id": "section_account",
+      "element": "section",
+      "label": "Napster account",
+      "icon": "fa-plug",
+      "onSave": {"type":"controller", "endpoint":"music_service/napster", "method":"saveNapsterAccount"},
+      "saveButton": {
+        "label": "TRANSLATE.SAVE",
+        "data": [
+          "username",
+          "password"
+        ]
+      },
+      "content": [
+        {
+          "id": "email",
+          "type":"text",
+          "element": "input",
+          "doc": "This is the email of your Napster account",
+          "label": "Email",
+          "value": ""
+        },
+        {
+          "id": "password",
+          "type":"password",
+          "element": "input",
+          "doc": "This is the password of your Napster account",
+          "label": "Password",
+          "value": ""
+        }
+      ]
+    }
   ]
 }
