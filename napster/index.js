@@ -66,8 +66,8 @@ napster.prototype.getUIConfig = function () {
         __dirname + '/i18n/strings_en.json',
         __dirname + '/UIConfig.json')
         .then(function (uiconf) {
-            uiconf.sections[0].content[0].value.value = self.config.get('email');
-            uiconf.sections[0].content[1].value.value = self.config.get('password');
+            uiconf.sections[0].content[0].value = self.config.get('email');
+            uiconf.sections[0].content[1].value = self.config.get('password');
 
             defer.resolve(uiconf);
         })
