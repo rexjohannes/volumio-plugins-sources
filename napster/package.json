@@ -1,0 +1,36 @@
+{
+	"name": "napster",
+	"version": "1.0.0",
+	"description": "Napster plugin for Volumio",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "rexum",
+	"license": "ISC",
+	"repository": "https://github.com/rexjohannes/volumio-plugins-sources",
+	"volumio_info": {
+		"prettyName": "Napster",
+		"icon": "fa-lightbulb-o",
+		"plugin_type": "music_service",
+		"architectures": [
+			"amd64",
+			"armhf",
+			"i386"
+		],
+		"os": [
+			"buster"
+		],
+		"details": "Lorem ipsum",
+		"changelog": "Lorem ipsum"
+	},
+	"engines": {
+		"node": ">=14.21.3",
+		"volumio": ">=3.512.0 <4.0.0"
+	},
+	"dependencies": {
+		"fs-extra": "^0.28.0",
+		"kew": "^0.7.0",
+		"v-conf": "^1.4.0"
+	}
+}
