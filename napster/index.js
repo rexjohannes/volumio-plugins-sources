@@ -2,6 +2,9 @@
 
 const libQ = require('kew');
 const fs = require('fs-extra');
+const config = new (require('v-conf'))();
+const exec = require('child_process').exec;
+const execSync = require('child_process').execSync;
 
 
 module.exports = napster;

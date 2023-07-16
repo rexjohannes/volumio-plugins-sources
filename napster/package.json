@@ -11,7 +11,7 @@
 	"repository": "https://github.com/rexjohannes/volumio-plugins-sources",
 	"volumio_info": {
 		"prettyName": "Napster",
-		"icon": "fa-brands fa-napster",
+		"icon": "fa-volume-off",
 		"plugin_type": "music_service",
 		"architectures": [
 			"amd64",
@@ -19,7 +19,9 @@
 			"i386"
 		],
 		"os": [
-			"buster"
+			"buster",
+			"bullseye",
+			"bookworm"
 		],
 		"details": "Lorem ipsum",
 		"changelog": "Lorem ipsum"
