@@ -122,8 +122,7 @@ napster.prototype.setConf = function (varName, varValue) {
 
 napster.prototype.login = async function (email, password) {
     const self = this;
-    try {
-        let resp = await fetch(apiUrl + '/oauth/token', {
+    let resp = await fetch(apiUrl + '/oauth/token', {
             method: 'POST',
             headers: {
                 'Authorization': 'Basic WlRKbE9XTmhaR1V0TnpsbVpTMDBaR1UyTFRrd1lqTXRaRGsxT0RSbE1Ea3dPRE01Ok1UUmpaVFZqTTJFdE9HVmxaaTAwT1RVM0xXRm1Oamt0TlRsbE9ERmhObVl5TnpJNQ==',
@@ -137,16 +136,12 @@ napster.prototype.login = async function (email, password) {
                 'grant_type': 'password'
             })
         })
-        resp = await resp.json();
-        self.commandRouter.pushToastMessage('success', "resp", resp);
-        this.config.set('access_token', resp['access_token']);
-        this.config.set('refresh_token', resp['refresh_token']);
-        this.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
-        this.config.set('catalog', resp['catalog']);
-        return true;
-    } catch (e) {
-        return false;
-    }
+    self.commandRouter.pushToastMessage('success', "resp", resp);
+    resp = await resp.json();
+    this.config.set('access_token', resp['access_token']);
+    this.config.set('refresh_token', resp['refresh_token']);
+    this.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
+    this.config.set('catalog', resp['catalog']);
 }
 
 napster.prototype.getStreamUrl = async function (trackId) {
