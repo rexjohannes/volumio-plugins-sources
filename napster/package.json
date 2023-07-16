@@ -11,7 +11,7 @@
 	"repository": "https://github.com/rexjohannes/volumio-plugins-sources",
 	"volumio_info": {
 		"prettyName": "Napster",
-		"icon": "fa-lightbulb-o",
+		"icon": "fa-napster",
 		"plugin_type": "music_service",
 		"architectures": [
 			"amd64",
