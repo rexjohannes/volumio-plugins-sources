@@ -136,6 +136,7 @@ napster.prototype.login = async function (email, password) {
             })
         })
         resp = await resp.json();
+        self.commandRouter.pushToastMessage('success', "resp", resp);
         this.config.set('access_token', resp['access_token']);
         this.config.set('refresh_token', resp['refresh_token']);
         this.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
