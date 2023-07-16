@@ -12,7 +12,7 @@
       "saveButton": {
         "label": "TRANSLATE.SAVE",
         "data": [
-          "username",
+          "email",
           "password"
         ]
       },
