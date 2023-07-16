@@ -1,8 +1,4 @@
 {
-  "enabled": {
-    "type": "boolean",
-    "value": false
-  },
   "email": {
     "type": "string",
     "value": ""
@@ -10,5 +6,41 @@
   "password": {
     "type": "string",
     "value": ""
+  },
+  "access_token": {
+    "type": "string",
+    "value": ""
+  },
+  "refresh_token": {
+    "type": "string",
+    "value": ""
+  },
+  "expires_at": {
+    "type": "number",
+    "value": 0
+  },
+  "catalog": {
+    "type": "string",
+    "value": ""
+  },
+  "artistImageSize": {
+    "type": "string",
+    "value": "356x237"
+  },
+  "albumImageSize": {
+    "type": "string",
+    "value": "300x300"
+  },
+  "playlistImageSize": {
+    "type": "string",
+    "value": "230x153"
+  },
+  "genreImageSize": {
+    "type": "string",
+    "value": "240x160"
+  },
+  "stationImageSize": {
+    "type": "string",
+    "value": "400x400"
   }
 }

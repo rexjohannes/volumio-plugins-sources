@@ -5,6 +5,7 @@ const fs = require('fs-extra');
 const config = new (require('v-conf'))();
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
+const handler = require("./lib/handler.js");
 
 
 module.exports = napster;
@@ -31,6 +32,8 @@ napster.prototype.onVolumioStart = function () {
 napster.prototype.onStart = function () {
     const self = this;
     const defer = libQ.defer();
+
+    self.mpdPlugin = self.commandRouter.pluginManager.getPlugin('music_service', 'mpd');
 
     // Once the Plugin has successfully started resolve the promise
     defer.resolve();
@@ -67,6 +70,7 @@ napster.prototype.getUIConfig = function () {
         __dirname + '/UIConfig.json')
         .then(function (uiconf) {
             uiconf.sections[0].content[0].value = self.config.get('email');
+            // TODO: Hide password
             uiconf.sections[0].content[1].value = self.config.get('password');
 
             defer.resolve(uiconf);
@@ -77,15 +81,18 @@ napster.prototype.getUIConfig = function () {
     return defer.promise;
 };
 
-napster.prototype.saveNapsterAccount = function (data) {
+napster.prototype.saveNapsterAccount = async function (data) {
     const self = this;
     const defer = libQ.defer();
 
     self.config.set('email', data['email']);
     self.config.set('password', data['password']);
 
-    self.commandRouter.pushToastMessage('success', "Saved", 'Your Napster account settings have been successfully updated');
-
+    if ((await handler.prototype.login(data['email'], data['password']))) {
+        self.commandRouter.pushToastMessage('success', "Logged in", 'Successfully logged in to Napster');
+    } else {
+        self.commandRouter.pushToastMessage('error', "Error", 'Could not log in to Napster');
+    }
     defer.resolve();
 
     return defer.promise;
@@ -118,7 +125,7 @@ napster.prototype.setConf = function (varName, varValue) {
 napster.prototype.addToBrowseSources = function () {
 
     // Use this function to add your music service plugin to music sources
-    //var data = {name: 'Spotify', uri: 'spotify',plugin_type:'music_service',plugin_name:'spop'};
+    const data = {name: 'Napster', uri: 'napster', plugin_type: 'music_service', plugin_name: 'napster'};
     this.commandRouter.volumioAddToBrowseSources(data);
 };
 
