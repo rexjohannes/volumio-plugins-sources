@@ -443,6 +443,7 @@ napster.prototype.getAlbumArt = function (data, path) {
 };
 
 napster.prototype.getAlbumImg = function (id) {
+    const self = this;
     return apiUrl + "/imageserver/v2/albums/" + id + "/images/" + self.config.get('albumImageSize') + ".jpg"
 }
 
@@ -467,14 +468,13 @@ napster.prototype.search = function (query) {
                 title: resp.data.search.data.tracks[i].name,
                 artist: resp.data.search.data.tracks[i].artistName,
                 album: resp.data.search.data.tracks[i].albumName,
-                albumart: napster.prototype.getAlbumImg(resp.data.search.data.tracks[i].albumId),
+                albumart: self.getAlbumImg(resp.data.search.data.tracks[i].albumId),
                 uri: 'napster/track/' + resp.data.search.data.tracks[i].id
             })
         }
         list.push({title: "Napster Tracks", icon: "fa fa-music", availableListViews: ["list", "grid"], items: trackList});
         defer.resolve(list)
     }).catch(function (err) {
-        console.log(err)
         self.commandRouter.logger.info(err);
     });
     return defer.promise;
