@@ -5,6 +5,8 @@ const fs = require('fs-extra');
 const config = new (require('v-conf'))();
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
+const axios = require('axios');
+const url = require('url');
 
 const apiUrl = 'https://api.napster.com';
 const userAgent = 'android/8.1.9.1055/NapsterGlobal';
@@ -122,38 +124,37 @@ napster.prototype.setConf = function (varName, varValue) {
 
 napster.prototype.login = async function (email, password) {
     const self = this;
-    let resp = await fetch(apiUrl + '/oauth/token', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Basic WlRKbE9XTmhaR1V0TnpsbVpTMDBaR1UyTFRrd1lqTXRaRGsxT0RSbE1Ea3dPRE01Ok1UUmpaVFZqTTJFdE9HVmxaaTAwT1RVM0xXRm1Oamt0TlRsbE9ERmhObVl5TnpJNQ==',
-                'User-Agent': userAgent,
-                'X-Px-Authorization': '3',
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-                'username': email,
-                'password': password,
-                'grant_type': 'password'
-            })
-        })
+    const params = new url.URLSearchParams({
+        'username': email,
+        'password': password,
+        'grant_type': 'password'
+    })
+    let resp = await axios.post(apiUrl + '/oauth/token', params.toString(), {
+        headers: {
+            'Authorization': 'Basic WlRKbE9XTmhaR1V0TnpsbVpTMDBaR1UyTFRrd1lqTXRaRGsxT0RSbE1Ea3dPRE01Ok1UUmpaVFZqTTJFdE9HVmxaaTAwT1RVM0xXRm1Oamt0TlRsbE9ERmhObVl5TnpJNQ==',
+            'User-Agent': userAgent,
+            'X-Px-Authorization': '3',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    });
+    resp = JSON.parse(resp.data);
     self.commandRouter.pushToastMessage('success', "resp", resp);
-    resp = await resp.json();
-    this.config.set('access_token', resp['access_token']);
-    this.config.set('refresh_token', resp['refresh_token']);
-    this.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
-    this.config.set('catalog', resp['catalog']);
+    self.config.set('access_token', resp['access_token']);
+    self.config.set('refresh_token', resp['refresh_token']);
+    self.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
+    self.config.set('catalog', resp['catalog']);
 }
 
 napster.prototype.getStreamUrl = async function (trackId) {
     const self = this;
-    let resp = await fetch(apiUrl + '/v3/streams/tracks?bitDepth=16&bitrate=44100&format=FLAC&id=' + trackId + ' "&sampleRate=44100', {
+    let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=16&bitrate=44100&format=FLAC&id=' + trackId + ' "&sampleRate=44100', {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
             'User-Agent': userAgent,
             'X-Px-Authorization': '3'
         }
     });
-    resp = await resp.json();
+    resp = JSON.parse(resp.data);
     return resp['streams'][0]['primaryUrl'];
 }
 
