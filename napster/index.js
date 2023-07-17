@@ -467,7 +467,7 @@ napster.prototype.search = function (query) {
                 title: resp.data.search.data.tracks[i].name,
                 artist: resp.data.search.data.tracks[i].artistName,
                 album: resp.data.search.data.tracks[i].albumName,
-                albumart: self.getAlbumImg(resp.data.search.data.tracks[i].albumId),
+                albumart: napster.prototype.getAlbumImg(resp.data.search.data.tracks[i].albumId),
                 uri: 'napster/track/' + resp.data.search.data.tracks[i].id
             })
         }
