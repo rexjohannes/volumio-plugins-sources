@@ -318,30 +318,30 @@ napster.prototype.clearAddPlayTrack = function (track) {
             });
     };
 
-    let uri = self.getStreamUrl(track.id);
+    self.getStreamUrl(track.id).then(r => {
+        return self.mpdPlugin.sendMpdCommand('stop', [])
+            .then(function() {
+                return self.mpdPlugin.sendMpdCommand('clear', []);
+            })
+            .then(function() {
+                return self.mpdPlugin.sendMpdCommand('load "' + r + '"', []);
+            })
+            .fail(function(e) {
+                return self.mpdPlugin.sendMpdCommand('add "' + r + '"', []);
+            })
+            .then(function() {
+                self.mpdPlugin.clientMpd.removeAllListeners('system-player');
+                self.mpdPlugin.clientMpd.once('system-player', napsterListenerCallback);
 
-    return self.mpdPlugin.sendMpdCommand('stop', [])
-        .then(function() {
-            return self.mpdPlugin.sendMpdCommand('clear', []);
-        })
-        .then(function() {
-            return self.mpdPlugin.sendMpdCommand('load "' + uri + '"', []);
-        })
-        .fail(function(e) {
-            return self.mpdPlugin.sendMpdCommand('add "' + uri + '"', []);
-        })
-        .then(function() {
-            self.mpdPlugin.clientMpd.removeAllListeners('system-player');
-            self.mpdPlugin.clientMpd.once('system-player', napsterListenerCallback);
-
-            return self.mpdPlugin.sendMpdCommand('play', [])
-                .then(function() {
-                    return self.mpdPlugin.getState()
-                        .then(function(state) {
-                            return self.pushState(state);
-                        });
-                });
-        });
+                return self.mpdPlugin.sendMpdCommand('play', [])
+                    .then(function() {
+                        return self.mpdPlugin.getState()
+                            .then(function(state) {
+                                return self.pushState(state);
+                            });
+                    });
+            });
+    });
 };
 
 napster.prototype.seek = function (timepos) {
@@ -413,8 +413,8 @@ napster.prototype.explodeUri = function (uri) {
                 'X-Px-Authorization': '3'
             }
         }).then(function (response) {
-            console.log(response)
-            defer.resolve(self.parseNapsterTrack(response.data.tracks[0]));
+            if (response.data.tracks.length > 0) defer.resolve(self.parseNapsterTrack(response.data.tracks[0]));
+            else defer.reject(new Error('napster track not found'));
         });
     } else {
         defer.reject(new Error('napster uri unknown'));
