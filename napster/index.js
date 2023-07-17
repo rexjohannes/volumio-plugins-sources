@@ -172,10 +172,128 @@ napster.prototype.addToBrowseSources = function () {
 
 napster.prototype.handleBrowseUri = function (curUri) {
     const self = this;
-
-    //self.commandRouter.logger.info(curUri);
     let response;
 
+    if (curUri.startsWith('napster')) {
+        if (curUri === 'napster') {
+            response = libQ.resolve({
+                navigation: {
+                    prev: {
+                        uri: 'napster'
+                    },
+                    lists: [
+                        {
+                            "title": "My Music",
+                            "icon": "fa fa-folder-open-o",
+                            "availableListViews": ["list","grid"],
+                            "items": [
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'Playlists',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/playlists'
+                                },
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'Favorites',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/favorites'
+                                },
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'Tracks',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/tracks'
+                                },
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'Albums',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/albums'
+                                },
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'My Top Plays',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/charts'
+                                }
+                            ]
+                        },
+                        {
+                            "title": "Napster",
+                            "icon": "fa fa-folder-open-o",
+                            "availableListViews": ["list","grid"],
+                            "items": [
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'Moods & Genres',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/genres'
+                                },
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'Popular Tracks',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/popular/tracks'
+                                },
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'Popular Albums',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/popular/albums'
+                                },
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'Popular Artists',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/popular/artists'
+                                },
+                                {
+                                    service: 'napster',
+                                    type: 'folder',
+                                    title: 'Best New Releases',
+                                    artist: '',
+                                    album: '',
+                                    icon: 'fa fa-folder-open-o',
+                                    uri: 'napster/new_releases'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            });
+        }
+        else if (curUri.startsWith('napster/playlists')) {
+
+        }
+    }
 
     return response;
 };
@@ -336,7 +454,7 @@ napster.prototype.getTrackInfo = function (uri) {
                  "title": resp.data["tracks"][0]["name"],
                  "artist": resp.data["tracks"][0]["artistName"],
                  "album": resp.data["tracks"][0]["albumName"],
-                 "albumart": "https://api.napster.com/imageserver/v2/albums/" + resp.data["tracks"][0]["albumId"] + "/images/" + self.config.get('albumImageSize') + ".jpg",
+                 "albumart": apiUrl + "/imageserver/v2/albums/" + resp.data["tracks"][0]["albumId"] + "/images/" + self.config.get('albumImageSize') + ".jpg",
                  "uri": "napster/track/" + resp.data["tracks"][0]["id"]
              }];
              defer.resolve(response);
