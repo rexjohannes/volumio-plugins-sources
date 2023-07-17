@@ -1,10 +1,6 @@
 'use strict';
 
 const libQ = require('kew');
-const fs = require('fs-extra');
-const config = new (require('v-conf'))();
-const exec = require('child_process').exec;
-const execSync = require('child_process').execSync;
 const axios = require('axios');
 const url = require('url');
 
@@ -15,8 +11,6 @@ const userAgent = 'android/8.1.9.1055/NapsterGlobal';
 module.exports = napster;
 
 function napster(context) {
-    const self = this;
-
     this.context = context;
     this.commandRouter = this.context.coreCommand;
     this.logger = this.context.logger;
@@ -25,7 +19,6 @@ function napster(context) {
 
 
 napster.prototype.onVolumioStart = function () {
-    const self = this;
     const configFile = this.commandRouter.pluginManager.getConfigurationFile(this.context, 'config.json');
     this.config = new (require('v-conf'))();
     this.config.loadFile(configFile);
@@ -47,9 +40,7 @@ napster.prototype.onStart = function () {
 };
 
 napster.prototype.onStop = function () {
-    const self = this;
     const defer = libQ.defer();
-
     this.commandRouter.volumioRemoveToBrowseSources('Napster');
 
     // Once the Plugin has successfully stopped resolve the promise
@@ -59,7 +50,6 @@ napster.prototype.onStop = function () {
 };
 
 napster.prototype.onRestart = function () {
-    const self = this;
     // Optional, use if you need it
 };
 
@@ -106,17 +96,14 @@ napster.prototype.getConfigurationFiles = function () {
 }
 
 napster.prototype.setUIConfig = function (data) {
-    const self = this;
     //Perform your installation tasks here
 };
 
 napster.prototype.getConf = function (varName) {
-    const self = this;
     //Perform your installation tasks here
 };
 
 napster.prototype.setConf = function (varName, varValue) {
-    const self = this;
     //Perform your installation tasks here
 };
 
@@ -141,7 +128,7 @@ napster.prototype.login = async function (email, password) {
         self.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
         self.config.set('catalog', resp['catalog']);
         self.commandRouter.pushToastMessage('success', "Logged in", 'Successfully logged in to Napster');
-    }).catch(function (err) {
+    }).catch(function () {
         self.commandRouter.pushToastMessage('error', "Error", 'Could not log in to Napster');
     })
 }
@@ -325,7 +312,7 @@ napster.prototype.clearAddPlayTrack = function (track) {
             .then(function() {
                 return self.mpdPlugin.sendMpdCommand('load "' + r + '"', []);
             })
-            .fail(function(e) {
+            .fail(function() {
                 return self.mpdPlugin.sendMpdCommand('add "' + r + '"', []);
             })
             .then(function() {
@@ -450,15 +437,15 @@ napster.prototype.getAlbumArt = function (data, path) {
 
     let artist, album;
 
-    if (data != undefined && data.path != undefined) {
+    if (data !== undefined && data.path !== undefined) {
         path = data.path;
     }
 
     let web;
 
-    if (data != undefined && data.artist != undefined) {
+    if (data !== undefined && data.artist !== undefined) {
         artist = data.artist;
-        if (data.album != undefined)
+        if (data.album !== undefined)
             album = data.album;
         else album = data.artist;
 
@@ -467,15 +454,15 @@ napster.prototype.getAlbumArt = function (data, path) {
 
     let url = '/albumart';
 
-    if (web != undefined)
+    if (web !== undefined)
         url = url + web;
 
-    if (web != undefined && path != undefined)
+    if (web !== undefined && path !== undefined)
         url = url + '&';
-    else if (path != undefined)
+    else if (path !== undefined)
         url = url + '?';
 
-    if (path != undefined)
+    if (path !== undefined)
         url = url + 'path=' + nodetools.urlEncode(path);
 
     return url;
@@ -511,29 +498,13 @@ napster.prototype.search = function (query) {
     return defer.promise;
 };
 
-napster.prototype._searchArtists = function (results) {
-
-};
-
-napster.prototype._searchAlbums = function (results) {
-
-};
-
-napster.prototype._searchPlaylists = function (results) {
-
-
-};
-
-napster.prototype._searchTracks = function (results) {
-
-};
-
 napster.prototype.parseNapsterTrack = function (data) {
     const self = this;
     return {
         service: "napster",
         type: "song",
         title: data["name"],
+        name: data["name"],
         artist: data["artistName"],
         album: data["albumName"],
         albumart: self.getAlbumImg(data["albumId"]),

@@ -25,15 +25,15 @@
   },
   "artistImageSize": {
     "type": "string",
-    "value": "356x237"
+    "value": "633x422"
   },
   "albumImageSize": {
     "type": "string",
-    "value": "300x300"
+    "value": "500x500"
   },
   "playlistImageSize": {
     "type": "string",
-    "value": "230x153"
+    "value": "1800x600"
   },
   "genreImageSize": {
     "type": "string",
@@ -41,6 +41,6 @@
   },
   "stationImageSize": {
     "type": "string",
-    "value": "400x400"
+    "value": "500x500"
   }
 }
