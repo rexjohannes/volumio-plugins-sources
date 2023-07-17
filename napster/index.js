@@ -433,7 +433,7 @@ napster.prototype.search = function (query) {
                 uri: resp.data.search.data.tracks[i].href
             })
         }
-        defer.resolve()
+        defer.resolve(results)
     }).catch(function (err) {
         self.commandRouter.logger.info(err);
     });
