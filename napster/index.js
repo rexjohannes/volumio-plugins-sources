@@ -402,7 +402,19 @@ napster.prototype.explodeUri = function (uri) {
     const self = this;
     const defer = libQ.defer();
 
-    // Mandatory: retrieve all info for a given URI
+    if (uri.startsWith('napster/track')) {
+        axios.get('https://api.napster.com/v2.2/tracks/' + uri.split('/')[2], {
+            headers: {
+                "Apikey": apiKey,
+                "User-Agent": userAgent,
+                'X-Px-Authorization': '3'
+            }
+        }).then(function (response) {
+            defer.resolve(self.parseNapsterTrack(response.data.tracks[0]));
+        });
+    } else {
+        defer.reject(new Error('napster uri unknown'));
+    }
 
     return defer.promise;
 };
@@ -462,15 +474,7 @@ napster.prototype.search = function (query) {
         let list = [];
         let trackList = [];
         for (let i in resp.data.search.data.tracks) {
-            trackList.push({
-                service: 'napster',
-                type: 'song',
-                title: resp.data.search.data.tracks[i].name,
-                artist: resp.data.search.data.tracks[i].artistName,
-                album: resp.data.search.data.tracks[i].albumName,
-                albumart: self.getAlbumImg(resp.data.search.data.tracks[i].albumId),
-                uri: 'napster/track/' + resp.data.search.data.tracks[i].id
-            })
+            trackList.push(self.parseNapsterTrack(resp.data.search.data.tracks[i]));
         }
         list.push({title: "Napster Tracks", icon: "fa fa-music", availableListViews: ["list", "grid"], items: trackList});
         defer.resolve(list)
@@ -497,6 +501,20 @@ napster.prototype._searchTracks = function (results) {
 
 };
 
+napster.prototype.parseNapsterTrack = function (data) {
+    const self = this;
+    let parsedTrack = {
+        service: "napster",
+        type: "song",
+        title: data["name"],
+        artist: data["artistName"],
+        album: data["albumName"],
+        albumart: self.getAlbumImg(data["albumId"]),
+        uri: 'napster/track/' + data["id"]
+    }
+    return parsedTrack;
+}
+
 napster.prototype.getTrackInfo = function (uri) {
     const self = this;
     const defer = libQ.defer();
@@ -508,15 +526,7 @@ napster.prototype.getTrackInfo = function (uri) {
                  'X-Px-Authorization': '3'
              }
          }).then(function (resp) {
-             let response = [{
-                 "service": "napster",
-                 "type": "song",
-                 "title": resp.data["tracks"][0]["name"],
-                 "artist": resp.data["tracks"][0]["artistName"],
-                 "album": resp.data["tracks"][0]["albumName"],
-                 "albumart": self.getAlbumImg(resp.data["tracks"][0]["albumId"]),
-                 "uri": 'napster/track/' + resp.data["tracks"][0]["id"]
-             }];
+             let response = [self.parseNapsterTrack(resp.data["tracks"][0])];
              defer.resolve(response);
          }).catch(function (err) {
                 defer.reject(err);
