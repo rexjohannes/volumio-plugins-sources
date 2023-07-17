@@ -278,7 +278,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                 {
                                     service: 'napster',
                                     type: 'folder',
-                                    title: 'Best New Releases',
+                                    title: 'New Releases',
                                     artist: '',
                                     album: '',
                                     icon: 'fa fa-folder-open-o',
@@ -414,8 +414,29 @@ napster.prototype.getAlbumArt = function (data, path) {
 napster.prototype.search = function (query) {
     const self = this;
     const defer = libQ.defer();
-
-    // Mandatory, search. You can divide the search in sections using following functions
+    axios.get(apiUrl + '/v2.2/search?catalog=AR&lang=es_AR&offset=0&per_type_limit=3&playlist_type=editorial&query=' + encodeURI(query.value.toLowerCase()) + '&rights=2&type=track', {
+        headers: {
+            "Apikey": apiKey,
+            "User-Agent": userAgent,
+            "X-Px-Authorization": "3"
+        }
+    }).then(function (resp) {
+        let results = {"title": "Napster", "icon": "fa fa-music", "availableListViews": ["list", "grid"], "items": []};
+        for (let i in resp.data.search.data.tracks) {
+            results.items.push({
+                service: 'napster',
+                type: 'song',
+                title: resp.data.search.data.tracks[i].name,
+                artist: resp.data.search.data.tracks[i].artistName,
+                album: resp.data.search.data.tracks[i].albumName,
+                albumart: apiUrl + "/imageserver/v2/albums/" + resp.data.search.data.tracks[i].albumId + "/images/" + self.config.get('albumImageSize') + ".jpg",
+                uri: resp.data.search.data.tracks[i].href
+            })
+        }
+        defer.resolve()
+    }).catch(function (err) {
+        self.commandRouter.logger.info(err);
+    });
 
     return defer.promise;
 };
@@ -455,7 +476,7 @@ napster.prototype.getTrackInfo = function (uri) {
                  "artist": resp.data["tracks"][0]["artistName"],
                  "album": resp.data["tracks"][0]["albumName"],
                  "albumart": apiUrl + "/imageserver/v2/albums/" + resp.data["tracks"][0]["albumId"] + "/images/" + self.config.get('albumImageSize') + ".jpg",
-                 "uri": "napster/track/" + resp.data["tracks"][0]["id"]
+                 "uri": resp.data["tracks"][0]["id"]["href"]
              }];
              defer.resolve(response);
          }).catch(function (err) {
