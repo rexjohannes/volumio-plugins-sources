@@ -50,6 +50,8 @@ napster.prototype.onStop = function () {
     const self = this;
     const defer = libQ.defer();
 
+    this.commandRouter.volumioRemoveToBrowseSources('Napster');
+
     // Once the Plugin has successfully stopped resolve the promise
     defer.resolve();
 
@@ -164,7 +166,7 @@ napster.prototype.getStreamUrl = async function (trackId) {
 napster.prototype.addToBrowseSources = function () {
 
     // Use this function to add your music service plugin to music sources
-    const data = {name: 'Napster', uri: 'napster', plugin_type: 'music_service', plugin_name: 'napster'};
+    const data = {name: 'Napster', uri: 'napster', plugin_type: 'music_service', plugin_name: 'napster', "albumart": "/albumart?sourceicon=music_service/napster/images/napster.png"};
     this.commandRouter.volumioAddToBrowseSources(data);
 };
 
