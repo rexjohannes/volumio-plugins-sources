@@ -148,7 +148,6 @@ napster.prototype.login = async function (email, password) {
 
 napster.prototype.getStreamUrl = async function (trackId) {
     const self = this;
-    console.log(trackId)
     let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=16&bitrate=44100&format=FLAC&id=' + trackId + '&sampleRate=44100', {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
@@ -377,6 +376,30 @@ napster.prototype.pause = function () {
                 });
         });
 };
+
+napster.prototype.resume = function() {
+    var self = this;
+    self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::resume');
+    return self.mpdPlugin.resume()
+        .then(function() {
+            return self.mpdPlugin.getState()
+                .then(function(state) {
+                    return self.pushState(state);
+                });
+        });
+}
+
+napster.prototype.prefetch = function(nextTrack) {
+    var self = this;
+    self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::prefetch');
+
+    self.getStreamUrl(nextTrack.id).then(r => {
+        return self.mpdPlugin.sendMpdCommand('add "' + r + '"', [])
+            .then(function() {
+                return self.mpdPlugin.sendMpdCommand('consume 1', []);
+            });
+    });
+}
 
 // Get state
 napster.prototype.getState = function () {
