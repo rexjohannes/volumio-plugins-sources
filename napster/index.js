@@ -148,6 +148,7 @@ napster.prototype.login = async function (email, password) {
 
 napster.prototype.getStreamUrl = async function (trackId) {
     const self = this;
+    console.log(trackId)
     let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=16&bitrate=44100&format=FLAC&id=' + trackId + ' "&sampleRate=44100', {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
