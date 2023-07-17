@@ -9,6 +9,7 @@ const axios = require('axios');
 const url = require('url');
 
 const apiUrl = 'https://api.napster.com';
+const apiKey = "ZTJlOWNhZGUtNzlmZS00ZGU2LTkwYjMtZDk1ODRlMDkwODM5"
 const userAgent = 'android/8.1.9.1055/NapsterGlobal';
 
 module.exports = napster;
@@ -37,6 +38,7 @@ napster.prototype.onStart = function () {
     const defer = libQ.defer();
 
     self.mpdPlugin = self.commandRouter.pluginManager.getPlugin('music_service', 'mpd');
+    self.addToBrowseSources();
 
     // Once the Plugin has successfully started resolve the promise
     defer.resolve();
@@ -91,12 +93,6 @@ napster.prototype.saveNapsterAccount = async function (data) {
     self.config.set('email', data['email']);
     self.config.set('password', data['password']);
 
-    /*
-    if ((await self.login(data['email'], data['password']))) {
-        self.commandRouter.pushToastMessage('success', "Logged in", 'Successfully logged in to Napster');
-    } else {
-        self.commandRouter.pushToastMessage('error', "Error", 'Could not log in to Napster');
-    } */
     await self.login(data['email'], data['password']);
     defer.resolve();
 
@@ -129,20 +125,23 @@ napster.prototype.login = async function (email, password) {
         'password': password,
         'grant_type': 'password'
     })
-    let resp = await axios.post(apiUrl + '/oauth/token', params.toString(), {
+    await axios.post(apiUrl + '/oauth/token', params.toString(), {
         headers: {
             'Authorization': 'Basic WlRKbE9XTmhaR1V0TnpsbVpTMDBaR1UyTFRrd1lqTXRaRGsxT0RSbE1Ea3dPRE01Ok1UUmpaVFZqTTJFdE9HVmxaaTAwT1RVM0xXRm1Oamt0TlRsbE9ERmhObVl5TnpJNQ==',
             'User-Agent': userAgent,
             'X-Px-Authorization': '3',
             'Content-Type': 'application/x-www-form-urlencoded'
         }
-    });
-    resp = resp.data;
-    self.commandRouter.pushToastMessage('success', "resp", resp);
-    self.config.set('access_token', resp['access_token']);
-    self.config.set('refresh_token', resp['refresh_token']);
-    self.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
-    self.config.set('catalog', resp['catalog']);
+    }).then(function (response) {
+        let resp = response.data;
+        self.config.set('access_token', resp['access_token']);
+        self.config.set('refresh_token', resp['refresh_token']);
+        self.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
+        self.config.set('catalog', resp['catalog']);
+        self.commandRouter.pushToastMessage('success', "Logged in", 'Successfully logged in to Napster');
+    }).catch(function (err) {
+        self.commandRouter.pushToastMessage('error', "Error", 'Could not log in to Napster');
+    })
 }
 
 napster.prototype.getStreamUrl = async function (trackId) {
@@ -154,7 +153,7 @@ napster.prototype.getStreamUrl = async function (trackId) {
             'X-Px-Authorization': '3'
         }
     });
-    resp = JSON.parse(resp.data);
+    resp = resp.data;
     return resp['streams'][0]['primaryUrl'];
 }
 
@@ -193,7 +192,7 @@ napster.prototype.clearAddPlayTrack = function (track) {
 napster.prototype.seek = function (timepos) {
     this.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::seek to ' + timepos);
 
-    return this.sendSpopCommand('seek ' + timepos, []);
+    return this.mpdPlugin.seek(timepos);
 };
 
 // Stop
@@ -201,7 +200,13 @@ napster.prototype.stop = function () {
     const self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::stop');
 
-
+    return self.mpdPlugin.stop()
+        .then(function() {
+            return self.mpdPlugin.getState()
+                .then(function(state) {
+                    return self.pushState(state);
+                });
+        });
 };
 
 // Spop pause
@@ -209,15 +214,19 @@ napster.prototype.pause = function () {
     const self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::pause');
 
-
+    return self.mpdPlugin.stop()
+        .then(function() {
+            return self.mpdPlugin.getState()
+                .then(function(state) {
+                    return self.pushState(state);
+                });
+        });
 };
 
 // Get state
 napster.prototype.getState = function () {
     const self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::getState');
-
-
 };
 
 //Parse state
@@ -233,7 +242,7 @@ napster.prototype.pushState = function (state) {
     const self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::pushState');
 
-    return self.commandRouter.servicePushState(state, self.servicename);
+    return self.commandRouter.servicePushState(state, "napster");
 };
 
 
@@ -308,11 +317,40 @@ napster.prototype._searchTracks = function (results) {
 
 };
 
+napster.prototype.getTrackInfo = function (uri) {
+    const self = this;
+    const defer = libQ.defer();
+    if (uri.startsWith('napster/track/')) {
+         axios.get(apiUrl + '/v2.2/tracks/' + uri.split('/')[2], {
+             headers: {
+                 "Apikey": apiKey,
+                 "User-Agent": userAgent,
+                 'X-Px-Authorization': '3'
+             }
+         }).then(function (resp) {
+             let response = [{
+                 "service": "napster",
+                 "type": "song",
+                 "title": resp.data["tracks"][0]["name"],
+                 "artist": resp.data["tracks"][0]["artistName"],
+                 "album": resp.data["tracks"][0]["albumName"],
+                 "albumart": "https://api.napster.com/imageserver/v2/albums/" + resp.data["tracks"][0]["albumId"] + "/images/" + self.config.get('albumImageSize') + ".jpg",
+                 "uri": "napster/track/" + resp.data["tracks"][0]["id"]
+             }];
+             defer.resolve(response);
+         }).catch(function (err) {
+                defer.reject(err);
+         });
+    } else {
+        defer.reject(new Error('napster: unknown uri type: ' + uri));
+    }
+    return defer.promise;
+}
+
 napster.prototype.goto = function (data) {
     const self = this;
     const defer = libQ.defer();
-
-// Handle go to artist and go to album function
+    // Handle go to artist and go to album function
 
     return defer.promise;
 };
