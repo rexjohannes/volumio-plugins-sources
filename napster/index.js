@@ -474,9 +474,9 @@ napster.prototype.search = function (query) {
         list.push({title: "Napster Tracks", icon: "fa fa-music", availableListViews: ["list", "grid"], items: trackList});
         defer.resolve(list)
     }).catch(function (err) {
+        console.log(err)
         self.commandRouter.logger.info(err);
     });
-
     return defer.promise;
 };
 
