@@ -137,7 +137,7 @@ napster.prototype.login = async function (email, password) {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
     });
-    resp = JSON.parse(resp.data);
+    resp = resp.data;
     self.commandRouter.pushToastMessage('success', "resp", resp);
     self.config.set('access_token', resp['access_token']);
     self.config.set('refresh_token', resp['refresh_token']);
