@@ -291,7 +291,6 @@ napster.prototype.handleBrowseUri = function (curUri) {
             });
         }
         else if (curUri.startsWith('napster/playlists')) {
-
         }
     }
 
@@ -304,9 +303,42 @@ napster.prototype.clearAddPlayTrack = function (track) {
     const self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::clearAddPlayTrack');
 
-    self.commandRouter.logger.info(JSON.stringify(track));
+    const napsterListenerCallback = () => {
+        self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster: MPD player state update');
+        self.mpdPlugin.getState()
+            .then(function (state) {
+                var selectedTrackBlock = self.commandRouter.stateMachine.getTrack(self.commandRouter.stateMachine.currentPosition);
+                if (selectedTrackBlock.service && selectedTrackBlock.service === 'napster') {
+                    self.mpdPlugin.clientMpd.once('system-player', napsterListenerCallback);
+                    return self.pushState(state);
+                } else {
+                    self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster: Not a napster track, removing listener');
+                }
+            });
+    };
 
-    return self.sendSpopCommand('uplay', [track.uri]);
+    return self.mpdPlugin.sendMpdCommand('stop', [])
+        .then(function() {
+            return self.mpdPlugin.sendMpdCommand('clear', []);
+        })
+        .then(function() {
+            return self.mpdPlugin.sendMpdCommand('load "' + track.uri + '"', []);
+        })
+        .fail(function(e) {
+            return self.mpdPlugin.sendMpdCommand('add "' + track.uri + '"', []);
+        })
+        .then(function() {
+            self.mpdPlugin.clientMpd.removeAllListeners('system-player');
+            self.mpdPlugin.clientMpd.once('system-player', napsterListenerCallback);
+
+            return self.mpdPlugin.sendMpdCommand('play', [])
+                .then(function() {
+                    return self.mpdPlugin.getState()
+                        .then(function(state) {
+                            return self.pushState(state);
+                        });
+                });
+        });
 };
 
 napster.prototype.seek = function (timepos) {
@@ -410,30 +442,37 @@ napster.prototype.getAlbumArt = function (data, path) {
     return url;
 };
 
+napster.prototype.getAlbumImg = function (id) {
+    return apiUrl + "/imageserver/v2/albums/" + id + "/images/" + self.config.get('albumImageSize') + ".jpg"
+}
+
 
 napster.prototype.search = function (query) {
     const self = this;
     const defer = libQ.defer();
-    axios.get(apiUrl + '/v2.2/search?catalog=AR&lang=es_AR&offset=0&per_type_limit=3&playlist_type=editorial&query=' + encodeURI(query.value.toLowerCase()) + '&rights=2&type=track', {
+    // &lang=en_US &rights=2
+    axios.get(apiUrl + '/v2.2/search?catalog=' + self.config.get('catalog') + '&offset=0&per_type_limit=20&query=' + encodeURI(query.value.toLowerCase()) + '&type=album,artist,track,playlist', {
         headers: {
             "Apikey": apiKey,
             "User-Agent": userAgent,
             "X-Px-Authorization": "3"
         }
     }).then(function (resp) {
-        let results = {"title": "Napster", "icon": "fa fa-music", "availableListViews": ["list", "grid"], "items": []};
+        let list = [];
+        let trackList = [];
         for (let i in resp.data.search.data.tracks) {
-            results.items.push({
+            trackList.push({
                 service: 'napster',
                 type: 'song',
                 title: resp.data.search.data.tracks[i].name,
                 artist: resp.data.search.data.tracks[i].artistName,
                 album: resp.data.search.data.tracks[i].albumName,
-                albumart: apiUrl + "/imageserver/v2/albums/" + resp.data.search.data.tracks[i].albumId + "/images/" + self.config.get('albumImageSize') + ".jpg",
-                uri: resp.data.search.data.tracks[i].href
+                albumart: self.getAlbumImg(resp.data.search.data.tracks[i].albumId),
+                uri: 'napster/track/' + resp.data.search.data.tracks[i].id
             })
         }
-        defer.resolve(results)
+        list.push({title: "Napster Tracks", icon: "fa fa-music", availableListViews: ["list", "grid"], items: trackList});
+        defer.resolve(list)
     }).catch(function (err) {
         self.commandRouter.logger.info(err);
     });
@@ -475,8 +514,8 @@ napster.prototype.getTrackInfo = function (uri) {
                  "title": resp.data["tracks"][0]["name"],
                  "artist": resp.data["tracks"][0]["artistName"],
                  "album": resp.data["tracks"][0]["albumName"],
-                 "albumart": apiUrl + "/imageserver/v2/albums/" + resp.data["tracks"][0]["albumId"] + "/images/" + self.config.get('albumImageSize') + ".jpg",
-                 "uri": resp.data["tracks"][0]["id"]["href"]
+                 "albumart": self.getAlbumImg(resp.data["tracks"][0]["albumId"]),
+                 "uri": 'napster/track/' + resp.data["tracks"][0]["id"]
              }];
              defer.resolve(response);
          }).catch(function (err) {
