@@ -317,15 +317,17 @@ napster.prototype.clearAddPlayTrack = function (track) {
             });
     };
 
+    let uri = self.getStreamUrl(track.id);
+
     return self.mpdPlugin.sendMpdCommand('stop', [])
         .then(function() {
             return self.mpdPlugin.sendMpdCommand('clear', []);
         })
         .then(function() {
-            return self.mpdPlugin.sendMpdCommand('load "' + track.uri + '"', []);
+            return self.mpdPlugin.sendMpdCommand('load "' + uri + '"', []);
         })
         .fail(function(e) {
-            return self.mpdPlugin.sendMpdCommand('add "' + track.uri + '"', []);
+            return self.mpdPlugin.sendMpdCommand('add "' + uri + '"', []);
         })
         .then(function() {
             self.mpdPlugin.clientMpd.removeAllListeners('system-player');
@@ -503,16 +505,16 @@ napster.prototype._searchTracks = function (results) {
 
 napster.prototype.parseNapsterTrack = function (data) {
     const self = this;
-    let parsedTrack = {
+    return {
         service: "napster",
         type: "song",
         title: data["name"],
         artist: data["artistName"],
         album: data["albumName"],
         albumart: self.getAlbumImg(data["albumId"]),
-        uri: 'napster/track/' + data["id"]
-    }
-    return parsedTrack;
+        uri: 'napster/track/' + data["id"],
+        id: data["id"]
+    };
 }
 
 napster.prototype.getTrackInfo = function (uri) {
