@@ -413,6 +413,7 @@ napster.prototype.explodeUri = function (uri) {
                 'X-Px-Authorization': '3'
             }
         }).then(function (response) {
+            console.log(response)
             defer.resolve(self.parseNapsterTrack(response.data.tracks[0]));
         });
     } else {
