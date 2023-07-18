@@ -135,7 +135,7 @@ napster.prototype.login = async function (email, password) {
 
 napster.prototype.getStreamUrl = async function (track) {
     const self = this;
-    let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=' + track.sampleBits + '&bitrate=' + track.bitrate + '&format=' + encodeURI(track.format) + '&id=' + track.id + '&sampleRate=' + track.sampleRate, {
+    let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=' + track.samplebits + '&bitrate=' + track.bitrate + '&format=' + encodeURI(track.format) + '&id=' + track.id + '&sampleRate=' + track.samplerate, {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
             'User-Agent': userAgent,
@@ -330,10 +330,9 @@ napster.prototype.clearAddPlayTrack = function (track) {
     });
 };
 
-napster.prototype.seek = function (timepos) {
-    this.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::seek to ' + timepos);
-
-    return this.mpdPlugin.seek(timepos);
+napster.prototype.seek = function (position) {
+    this.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::seek to ' + position);
+    return this.mpdPlugin.seek(position);
 };
 
 // Stop
@@ -350,7 +349,6 @@ napster.prototype.stop = function () {
         });
 };
 
-// Spop pause
 napster.prototype.pause = function () {
     const self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::pause');
@@ -434,7 +432,7 @@ napster.prototype.explodeUri = function (uri) {
 };
 
 napster.prototype.getAlbumArt = function (data, path) {
-
+    //TODO: what is this?
     let artist, album;
 
     if (data !== undefined && data.path !== undefined) {
@@ -470,7 +468,9 @@ napster.prototype.getAlbumArt = function (data, path) {
 
 napster.prototype.getAlbumImg = function (id) {
     const self = this;
-    return apiUrl + "/imageserver/v2/albums/" + id + "/images/" + self.config.get('albumImageSize') + ".jpg"
+    // https://web.archive.org/web/20230205095343/https://developer.prod.napster.com/api/v2.2#images-apis
+    // TODO: other sizes on search etc
+    return apiUrl + "/imageserver/v2/albums/" + id + "/images/500x500.jpg"
 }
 
 
@@ -519,8 +519,8 @@ napster.prototype.parseNapsterTrack = function (data) {
         id: data["id"],
         bitrate: selected["bitrate"],
         format: selected["name"],
-        sampleBits: selected["sampleBits"],
-        sampleRate: selected["sampleRate"]
+        samplebits: selected["sampleBits"],
+        samplerate: selected["sampleRate"]
     };
 }
 

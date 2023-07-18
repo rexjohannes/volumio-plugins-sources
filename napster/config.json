@@ -22,25 +22,5 @@
   "catalog": {
     "type": "string",
     "value": ""
-  },
-  "artistImageSize": {
-    "type": "string",
-    "value": "633x422"
-  },
-  "albumImageSize": {
-    "type": "string",
-    "value": "500x500"
-  },
-  "playlistImageSize": {
-    "type": "string",
-    "value": "1800x600"
-  },
-  "genreImageSize": {
-    "type": "string",
-    "value": "240x160"
-  },
-  "stationImageSize": {
-    "type": "string",
-    "value": "500x500"
   }
 }
