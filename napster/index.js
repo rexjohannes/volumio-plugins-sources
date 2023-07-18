@@ -32,6 +32,7 @@ napster.prototype.onStart = function () {
 
     self.mpdPlugin = self.commandRouter.pluginManager.getPlugin('music_service', 'mpd');
     self.addToBrowseSources();
+    if (self.config.get('email') !== '') self.refreshToken();
 
     // Once the Plugin has successfully started resolve the promise
     defer.resolve();
@@ -122,10 +123,10 @@ napster.prototype.login = async function (email, password) {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
     }).then(function (response) {
+        // TODO: register as device?
         let resp = response.data;
         self.config.set('access_token', resp['access_token']);
         self.config.set('refresh_token', resp['refresh_token']);
-        // TODO: Handle expires_at
         self.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
         self.config.set('catalog', resp['catalog']);
         self.commandRouter.pushToastMessage('success', "Logged in", 'Successfully logged in to Napster');
@@ -134,8 +135,34 @@ napster.prototype.login = async function (email, password) {
     })
 }
 
+napster.prototype.refreshToken = async function () {
+    const self = this;
+    const params = new URLSearchParams({
+            'client_id': apiKey,
+            'client_secret': 'MTRjZTVjM2EtOGVlZi00OTU3LWFmNjktNTllODFhNmYyNzI5',
+            'response_type': 'code',
+            'grant_type': 'refresh_token',
+            'refresh_token': self.config.get('refresh_token')
+        })
+    await axios.post(apiUrl + '/oauth/token', params.toString(), {
+        headers: {
+            'Authorization': 'Basic WlRKbE9XTmhaR1V0TnpsbVpTMDBaR1UyTFRrd1lqTXRaRGsxT0RSbE1Ea3dPRE01Ok1UUmpaVFZqTTJFdE9HVmxaaTAwT1RVM0xXRm1Oamt0TlRsbE9ERmhObVl5TnpJNQ==',
+            'User-Agent': 'android/8.1.9.1055/NapsterGlobal',
+            'X-Px-Authorization': '3',
+        }
+    }).then(function (response) {
+        let resp = response.data;
+        self.config.set('access_token', resp['access_token']);
+        self.config.set('refresh_token', resp['refresh_token']);
+        self.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
+    }).catch(async function () {
+        await self.login(self.config.get('email'), self.config.get('password'));
+    })
+}
+
 napster.prototype.getStreamUrl = async function (track) {
     const self = this;
+    if (self.config.get('expires_at') < Date.now() + 60 * 60 * 1000) await self.refreshToken();
     let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=' + track.bitdepth + '&bitrate=' + track.bitrate + '&format=' + encodeURI(track.format) + '&id=' + track.id + '&sampleRate=' + track.samplerate, {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
@@ -471,6 +498,7 @@ napster.prototype.getAlbumImg = function (id) {
     const self = this;
     // https://web.archive.org/web/20230205095343/https://developer.prod.napster.com/api/v2.2#images-apis
     // TODO: other sizes on search etc
+    // TODO: configurable size
     return apiUrl + "/imageserver/v2/albums/" + id + "/images/500x500.jpg"
 }
 
@@ -518,6 +546,7 @@ napster.prototype.parseNapsterTrack = function (data) {
         name: data["name"],
         artist: data["artistName"],
         album: data["albumName"],
+        // TODO: really the album not track art?
         albumart: self.getAlbumImg(data["albumId"]),
         uri: 'napster/track/' + data["id"],
         id: data["id"],
