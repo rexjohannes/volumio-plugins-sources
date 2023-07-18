@@ -416,7 +416,7 @@ napster.prototype.explodeUri = function (uri) {
     const defer = libQ.defer();
 
     if (uri.startsWith('napster/track')) {
-        axios.get('https://api.napster.com/v2.1/tracks/' + uri.split('/')[2], {
+        axios.get('https://api.napster.com/v2.2/tracks/' + uri.split('/')[2], {
             headers: {
                 "Apikey": apiKey,
                 "User-Agent": userAgent,
@@ -501,7 +501,7 @@ napster.prototype.search = function (query) {
 napster.prototype.parseNapsterTrack = function (data) {
     const self = this;
     let selected
-    if (data["losslessFormats"] !== undefined && data["losslessFormats"].length > 0) {
+    if (data["losslessFormats"] !== undefined && data["losslessFormats"].length < 0) {
         selected = data["losslessFormats"][data["losslessFormats"].length - 1];
     } else {
         selected = data["formats"][data["formats"].length - 1];
@@ -510,6 +510,7 @@ napster.prototype.parseNapsterTrack = function (data) {
         service: "napster",
         type: "song",
         title: data["name"],
+        duration: data["playbackSeconds"],
         name: data["name"],
         artist: data["artistName"],
         album: data["albumName"],
