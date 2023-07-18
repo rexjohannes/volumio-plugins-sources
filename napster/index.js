@@ -133,9 +133,9 @@ napster.prototype.login = async function (email, password) {
     })
 }
 
-napster.prototype.getStreamUrl = async function (trackId) {
+napster.prototype.getStreamUrl = async function (track) {
     const self = this;
-    let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=16&bitrate=44100&format=FLAC&id=' + trackId + '&sampleRate=44100', {
+    let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=' + track.sampleBits + '&bitrate=' + track.bitrate + '&format=' + encodeURI(track.format) + '&id=' + track.id + '&sampleRate=' + track.sampleRate, {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
             'User-Agent': userAgent,
@@ -304,7 +304,7 @@ napster.prototype.clearAddPlayTrack = function (track) {
             });
     };
 
-    self.getStreamUrl(track.id).then(r => {
+    self.getStreamUrl(track).then(r => {
         return self.mpdPlugin.sendMpdCommand('stop', [])
             .then(function() {
                 return self.mpdPlugin.sendMpdCommand('clear', []);
@@ -380,7 +380,7 @@ napster.prototype.prefetch = function(nextTrack) {
     var self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::prefetch');
 
-    self.getStreamUrl(nextTrack.id).then(r => {
+    self.getStreamUrl(nextTrack).then(r => {
         return self.mpdPlugin.sendMpdCommand('add "' + r + '"', [])
             .then(function() {
                 return self.mpdPlugin.sendMpdCommand('consume 1', []);
@@ -478,7 +478,7 @@ napster.prototype.search = function (query) {
     const self = this;
     const defer = libQ.defer();
     // &lang=en_US &rights=2
-    axios.get(apiUrl + '/v2.2/search?catalog=' + self.config.get('catalog') + '&offset=0&per_type_limit=20&query=' + encodeURI(query.value.toLowerCase()) + '&type=album,artist,track,playlist', {
+    axios.get(apiUrl + '/v2.2/search?catalog=' + self.config.get('catalog') + '&offset=0&per_type_limit=20&query=' + encodeURI(query.value.toLowerCase()) + '&rights=2&type=album,artist,track,playlist', {
         headers: {
             "Apikey": apiKey,
             "User-Agent": userAgent,
@@ -500,6 +500,12 @@ napster.prototype.search = function (query) {
 
 napster.prototype.parseNapsterTrack = function (data) {
     const self = this;
+    let selected
+    if (data["losslessFormats"] !== undefined && data["losslessFormats"].length > 0) {
+        selected = data["losslessFormats"][data["losslessFormats"].length - 1];
+    } else {
+        selected = data["formats"][data["formats"].length - 1];
+    }
     return {
         service: "napster",
         type: "song",
@@ -509,7 +515,11 @@ napster.prototype.parseNapsterTrack = function (data) {
         album: data["albumName"],
         albumart: self.getAlbumImg(data["albumId"]),
         uri: 'napster/track/' + data["id"],
-        id: data["id"]
+        id: data["id"],
+        bitrate: selected["bitrate"],
+        format: selected["name"],
+        sampleBits: selected["sampleBits"],
+        sampleRate: selected["sampleRate"]
     };
 }
 
