@@ -521,7 +521,7 @@ napster.prototype.parseNapsterTrack = function (data) {
         format: selected["name"],
         bitdepth: selected["sampleBits"],
         samplerate: selected["sampleRate"],
-        fileFormat: selected["name"].toLowerCase(),
+        trackType: selected["name"].toLowerCase(),
     };
 }
 
