@@ -416,7 +416,7 @@ napster.prototype.explodeUri = function (uri) {
     const defer = libQ.defer();
 
     if (uri.startsWith('napster/track')) {
-        axios.get('https://api.napster.com/v2.2/tracks/' + uri.split('/')[2], {
+        axios.get('https://api.napster.com/v2.1/tracks/' + uri.split('/')[2], {
             headers: {
                 "Apikey": apiKey,
                 "User-Agent": userAgent,
