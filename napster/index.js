@@ -135,7 +135,7 @@ napster.prototype.login = async function (email, password) {
 
 napster.prototype.getStreamUrl = async function (track) {
     const self = this;
-    let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=' + track.samplebits + '&bitrate=' + track.bitrate + '&format=' + encodeURI(track.trackType) + '&id=' + track.id + '&sampleRate=' + track.samplerate, {
+    let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=' + track.bitdepth + '&bitrate=' + track.bitrate + '&format=' + encodeURI(track.format) + '&id=' + track.id + '&sampleRate=' + track.samplerate, {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
             'User-Agent': userAgent,
@@ -518,9 +518,10 @@ napster.prototype.parseNapsterTrack = function (data) {
         uri: 'napster/track/' + data["id"],
         id: data["id"],
         bitrate: selected["bitrate"],
-        trackType: selected["name"],
-        samplebits: selected["sampleBits"],
+        format: selected["name"],
+        bitdepth: selected["sampleBits"],
         samplerate: selected["sampleRate"],
+        fileFormat: selected["name"].toLowerCase(),
     };
 }
 
