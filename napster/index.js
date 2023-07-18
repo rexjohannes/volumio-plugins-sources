@@ -355,7 +355,7 @@ napster.prototype.pause = function () {
     const self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::pause');
 
-    return self.mpdPlugin.stop()
+    return self.mpdPlugin.pause()
         .then(function() {
             return self.mpdPlugin.getState()
                 .then(function(state) {
@@ -501,7 +501,7 @@ napster.prototype.search = function (query) {
 napster.prototype.parseNapsterTrack = function (data) {
     const self = this;
     let selected
-    if (data["losslessFormats"] !== undefined && data["losslessFormats"].length < 0) {
+    if (data["losslessFormats"] !== undefined && data["losslessFormats"].length > 0) {
         selected = data["losslessFormats"][data["losslessFormats"].length - 1];
     } else {
         selected = data["formats"][data["formats"].length - 1];
