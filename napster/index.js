@@ -125,6 +125,7 @@ napster.prototype.login = async function (email, password) {
         let resp = response.data;
         self.config.set('access_token', resp['access_token']);
         self.config.set('refresh_token', resp['refresh_token']);
+        // TODO: Handle expires_at
         self.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
         self.config.set('catalog', resp['catalog']);
         self.commandRouter.pushToastMessage('success', "Logged in", 'Successfully logged in to Napster');
@@ -477,8 +478,9 @@ napster.prototype.getAlbumImg = function (id) {
 napster.prototype.search = function (query) {
     const self = this;
     const defer = libQ.defer();
+    // TODO: configurable per_type_limit
     // &lang=en_US &rights=2
-    axios.get(apiUrl + '/v2.2/search?catalog=' + self.config.get('catalog') + '&offset=0&per_type_limit=20&query=' + encodeURI(query.value.toLowerCase()) + '&rights=2&type=album,artist,track,playlist', {
+    axios.get(apiUrl + '/v2.2/search?catalog=' + self.config.get('catalog') + '&offset=0&per_type_limit=30&query=' + encodeURI(query.value.toLowerCase()) + '&rights=2&type=album,artist,track,playlist', {
         headers: {
             "Apikey": apiKey,
             "User-Agent": userAgent,
@@ -501,6 +503,8 @@ napster.prototype.search = function (query) {
 napster.prototype.parseNapsterTrack = function (data) {
     const self = this;
     let selected
+    //TODO: improve selection
+    //TODO: config for format selection
     if (data["losslessFormats"] !== undefined && data["losslessFormats"].length > 0) {
         selected = data["losslessFormats"][data["losslessFormats"].length - 1];
     } else {
@@ -520,7 +524,8 @@ napster.prototype.parseNapsterTrack = function (data) {
         bitrate: selected["bitrate"],
         format: selected["name"],
         bitdepth: selected["sampleBits"],
-        samplerate: selected["sampleRate"],
+        samplerate: selected["sampleRate"]
+        //TODO: support AAC PLUS
         trackType: selected["name"].toLowerCase(),
     };
 }
