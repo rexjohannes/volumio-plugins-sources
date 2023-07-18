@@ -524,7 +524,7 @@ napster.prototype.parseNapsterTrack = function (data) {
         bitrate: selected["bitrate"],
         format: selected["name"],
         bitdepth: selected["sampleBits"],
-        samplerate: selected["sampleRate"]
+        samplerate: selected["sampleRate"],
         //TODO: support AAC PLUS
         trackType: selected["name"].toLowerCase(),
     };
