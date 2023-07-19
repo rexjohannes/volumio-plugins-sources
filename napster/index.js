@@ -185,6 +185,40 @@ napster.prototype.addToBrowseSources = function () {
     this.commandRouter.volumioAddToBrowseSources(data);
 };
 
+napster.protoype.browseAlbums = function () {
+    const self = this;
+    // &lang=en_US
+    // TODO: limit, language
+    axios.get(apiUrl + '/v2.2/me/library/albums?limit=20&offset=0&rights=2', {
+        headers: {
+            'Authorization': 'Bearer ' + self.config.get('access_token'),
+            'User-Agent': userAgent,
+            'X-Px-Authorization': '3'
+        }
+    }).then(function (response) {
+        let items = [];
+        for (let album of response.data.albums) {
+            items.push({service: 'napster', type: 'playlist', title: album.name, artist: album.artistName, album: "", albumart: self.getAlbumImg(album.id), uri: 'napster/album/' + album.id})
+        }
+        let resp = {
+            navigation: {
+                prev: {
+                    uri: "napster"
+                },
+                lists: [
+                    {
+                        availableListViews: ["list", "grid"],
+                        items: items,
+                        title: "Albums",
+                        icon: "fa fa-folder-open-o"
+                    }
+                ]
+            }
+        }
+        return libQ.resolve(resp);
+    })
+};
+
 napster.prototype.handleBrowseUri = function (curUri) {
     const self = this;
     let response;
@@ -226,7 +260,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Tracks',
                                     artist: '',
                                     album: '',
-                                    albumart: '/albumart?sourceicon=music_service/mpd/musiclibraryicon.png',
+                                    icon: 'fa fa-music',
                                     uri: 'napster/tracks'
                                 },
                                 {
@@ -269,7 +303,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Popular Tracks',
                                     artist: '',
                                     album: '',
-                                    albumart: '/albumart?sourceicon=music_service/mpd/musiclibraryicon.png',
+                                    icon: 'fa fa-music',
                                     uri: 'napster/popular/tracks'
                                 },
                                 {
@@ -296,7 +330,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'New Releases',
                                     artist: '',
                                     album: '',
-                                    albumart: '/albumart?sourceicon=music_service/mpd/musiclibraryicon.png',
+                                    icon: 'fa fa-music',
                                     uri: 'napster/new_releases'
                                 }
                             ]
@@ -305,8 +339,8 @@ napster.prototype.handleBrowseUri = function (curUri) {
                 }
             });
         }
-        else if (curUri.startsWith('napster/playlists')) {
-            // TODO: implement other routes
+        else if (curUri.startsWith('napster/albums')) {
+            response = self.browseAlbums();
         }
     }
 

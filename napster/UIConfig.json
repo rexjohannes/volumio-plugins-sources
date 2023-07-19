@@ -34,41 +34,6 @@
           "value": ""
         }
       ]
-    },
-    {
-      "id": "section_images",
-      "element": "section",
-      "label": "Image size",
-      "icon": "fa-picture-o",
-      "onSave": {"type":"controller", "endpoint":"music_service/napster", "method":"saveNapsterImageSize"},
-      "saveButton": {
-        "label": "TRANSLATE.SAVE",
-        "data": ["image_size"]
-        },
-      "content": [
-        {
-          "id": "image_size",
-          "type":"select",
-          "element": "select",
-          "doc": "This is the size of the images that will be displayed in the UI",
-          "label": "Image size",
-          "value": "large",
-          "options": [
-            {
-              "label": "Small",
-              "value": "small"
-            },
-            {
-              "label": "Medium",
-              "value": "medium"
-            },
-            {
-              "label": "Large",
-              "value": "large"
-            }
-          ]
-        }
-      ]
     }
   ]
 }
