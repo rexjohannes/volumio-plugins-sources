@@ -185,41 +185,48 @@ napster.prototype.addToBrowseSources = function () {
     this.commandRouter.volumioAddToBrowseSources(data);
 };
 
-napster.prototype.browseAlbums = function () {
+napster.prototype.browseAlbums = async function () {
     const self = this;
     // &lang=en_US
     // TODO: limit, language
-    axios.get(apiUrl + '/v2.2/me/library/albums?limit=20&offset=0&rights=2', {
+    let response = await axios.get(apiUrl + '/v2.2/me/library/albums?limit=20&offset=0&rights=2', {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
             'User-Agent': userAgent,
             'X-Px-Authorization': '3'
         }
-    }).then(function (response) {
-        let items = [];
-        for (let album of response.data.albums) {
-            items.push({service: 'napster', type: 'playlist', title: album.name, artist: album.artistName, album: "", albumart: self.getAlbumImg(album.id), uri: 'napster/album/' + album.id})
-        }
-        let resp = {
-            navigation: {
-                prev: {
-                    uri: "napster"
-                },
-                lists: [
-                    {
-                        availableListViews: ["list", "grid"],
-                        items: items,
-                        title: "Albums",
-                        icon: "fa fa-folder-open-o"
-                    }
-                ]
-            }
-        }
-        return libQ.resolve(resp);
     })
+    let items = [];
+    for (let album of response.data.albums) {
+        items.push({
+            service: 'napster',
+            type: 'playlist',
+            title: album.name,
+            artist: album.artistName,
+            album: "",
+            albumart: self.getAlbumImg(album.id),
+            uri: 'napster/album/' + album.id
+        })
+    }
+    let resp = {
+        navigation: {
+            prev: {
+                uri: "napster"
+            },
+            lists: [
+                {
+                    availableListViews: ["list", "grid"],
+                    items: items,
+                    title: "Albums",
+                    icon: "fa fa-folder-open-o"
+                }
+            ]
+        }
+    }
+    return libQ.resolve(resp);
 };
 
-napster.prototype.handleBrowseUri = function (curUri) {
+napster.prototype.handleBrowseUri = async function (curUri) {
     const self = this;
     let response;
 
@@ -234,7 +241,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                         {
                             "title": "My Music",
                             "icon": "fa fa-folder-open-o",
-                            "availableListViews": ["list","grid"],
+                            "availableListViews": ["list", "grid"],
                             "items": [
                                 {
                                     service: 'napster',
@@ -286,7 +293,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                         {
                             "title": "Napster",
                             "icon": "fa fa-folder-open-o",
-                            "availableListViews": ["list","grid"],
+                            "availableListViews": ["list", "grid"],
                             "items": [
                                 {
                                     service: 'napster',
@@ -338,9 +345,8 @@ napster.prototype.handleBrowseUri = function (curUri) {
                     ]
                 }
             });
-        }
-        else if (curUri.startsWith('napster/albums')) {
-            response = self.browseAlbums();
+        } else if (curUri.startsWith('napster/albums')) {
+            response = await self.browseAlbums();
         }
     }
 
