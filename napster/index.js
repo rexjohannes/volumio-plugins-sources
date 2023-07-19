@@ -185,7 +185,7 @@ napster.prototype.addToBrowseSources = function () {
     this.commandRouter.volumioAddToBrowseSources(data);
 };
 
-napster.protoype.browseAlbums = function () {
+napster.prototype.browseAlbums = function () {
     const self = this;
     // &lang=en_US
     // TODO: limit, language
