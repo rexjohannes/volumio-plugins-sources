@@ -147,8 +147,9 @@ napster.prototype.refreshToken = async function () {
     await axios.post(apiUrl + '/oauth/token', params.toString(), {
         headers: {
             'Authorization': 'Basic WlRKbE9XTmhaR1V0TnpsbVpTMDBaR1UyTFRrd1lqTXRaRGsxT0RSbE1Ea3dPRE01Ok1UUmpaVFZqTTJFdE9HVmxaaTAwT1RVM0xXRm1Oamt0TlRsbE9ERmhObVl5TnpJNQ==',
-            'User-Agent': 'android/8.1.9.1055/NapsterGlobal',
+            'User-Agent': userAgent,
             'X-Px-Authorization': '3',
+            'Content-Type': 'application/x-www-form-urlencoded'
         }
     }).then(function (response) {
         let resp = response.data;
@@ -179,7 +180,6 @@ napster.prototype.getStreamUrl = async function (track) {
 
 
 napster.prototype.addToBrowseSources = function () {
-
     // Use this function to add your music service plugin to music sources
     const data = {name: 'Napster', uri: 'napster', plugin_type: 'music_service', plugin_name: 'napster', "albumart": "/albumart?sourceicon=music_service/napster/images/napster.png"};
     this.commandRouter.volumioAddToBrowseSources(data);
@@ -208,7 +208,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Playlists',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/mpd/playlisticon.png',
                                     uri: 'napster/playlists'
                                 },
                                 {
@@ -217,7 +217,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Favorites',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/mpd/favouritesicon.png',
                                     uri: 'napster/favorites'
                                 },
                                 {
@@ -226,7 +226,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Tracks',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/mpd/musiclibraryicon.png',
                                     uri: 'napster/tracks'
                                 },
                                 {
@@ -235,7 +235,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Albums',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/mpd/albumicon.png',
                                     uri: 'napster/albums'
                                 },
                                 {
@@ -244,7 +244,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'My Top Plays',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/last_100/icon.png',
                                     uri: 'napster/charts'
                                 }
                             ]
@@ -260,7 +260,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Moods & Genres',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/mpd/genreicon.png',
                                     uri: 'napster/genres'
                                 },
                                 {
@@ -269,7 +269,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Popular Tracks',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/mpd/musiclibraryicon.png',
                                     uri: 'napster/popular/tracks'
                                 },
                                 {
@@ -278,7 +278,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Popular Albums',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/mpd/albumicon.png',
                                     uri: 'napster/popular/albums'
                                 },
                                 {
@@ -287,7 +287,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'Popular Artists',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/mpd/artisticon.png',
                                     uri: 'napster/popular/artists'
                                 },
                                 {
@@ -296,7 +296,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
                                     title: 'New Releases',
                                     artist: '',
                                     album: '',
-                                    icon: 'fa fa-folder-open-o',
+                                    albumart: '/albumart?sourceicon=music_service/mpd/musiclibraryicon.png',
                                     uri: 'napster/new_releases'
                                 }
                             ]
@@ -306,6 +306,7 @@ napster.prototype.handleBrowseUri = function (curUri) {
             });
         }
         else if (curUri.startsWith('napster/playlists')) {
+            // TODO: implement other routes
         }
     }
 
@@ -322,7 +323,7 @@ napster.prototype.clearAddPlayTrack = function (track) {
         self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster: MPD player state update');
         self.mpdPlugin.getState()
             .then(function (state) {
-                var selectedTrackBlock = self.commandRouter.stateMachine.getTrack(self.commandRouter.stateMachine.currentPosition);
+                let selectedTrackBlock = self.commandRouter.stateMachine.getTrack(self.commandRouter.stateMachine.currentPosition);
                 if (selectedTrackBlock.service && selectedTrackBlock.service === 'napster') {
                     self.mpdPlugin.clientMpd.once('system-player', napsterListenerCallback);
                     return self.pushState(state);
@@ -440,7 +441,6 @@ napster.prototype.pushState = function (state) {
 napster.prototype.explodeUri = function (uri) {
     const self = this;
     const defer = libQ.defer();
-
     if (uri.startsWith('napster/track')) {
         axios.get('https://api.napster.com/v2.2/tracks/' + uri.split('/')[2], {
             headers: {
@@ -453,6 +453,7 @@ napster.prototype.explodeUri = function (uri) {
             else defer.reject(new Error('napster track not found'));
         });
     } else {
+        //TODO: support other types?
         defer.reject(new Error('napster uri unknown'));
     }
 
@@ -554,8 +555,7 @@ napster.prototype.parseNapsterTrack = function (data) {
         format: selected["name"],
         bitdepth: selected["sampleBits"],
         samplerate: selected["sampleRate"],
-        //TODO: support AAC PLUS
-        trackType: selected["name"].toLowerCase(),
+        trackType: (selected["name"].toLowerCase().startsWith("aac")) ? "aac" : selected["name"].toLowerCase(),
     };
 }
 
