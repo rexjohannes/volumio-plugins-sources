@@ -259,6 +259,54 @@ napster.prototype.browseAlbums = async function () {
     return libQ.resolve(resp);
 };
 
+napster.prototype.browsePlaylists = async function () {
+    const self = this;
+    // &lang=en_US
+    // TODO: limit
+    let response = await axios.get(apiUrl + '/v2.2/me/search/playlists?include_private=true&limit=50&offset=0&sampleArtists=verbose&sort=modified_date&source=my_favorite_playlists,my_own_playlists', {
+        headers: {
+            'Authorization': 'Bearer ' + self.config.get('access_token'),
+            'User-Agent': userAgent,
+            'X-Px-Authorization': '3'
+        }
+    })
+    let items = [];
+    for (let playlist of response.data.playlists) {
+        let creator = await axios.get(playlist.links.members.href, {
+            headers: {
+                "Apikey": apiKey,
+                "User-Agent": userAgent,
+                'X-Px-Authorization': '3'
+            }
+        })
+        items.push({
+            service: 'napster',
+            type: 'playlist',
+            title: playlist.name,
+            artist: creator["members"][0]["realName"],
+            album: "",
+            albumart: playlist.images.url,
+            uri: 'napster/playlist/' + playlist.id
+        })
+    }
+    let resp = {
+        navigation: {
+            prev: {
+                uri: "napster"
+            },
+            lists: [
+                {
+                    availableListViews: ["list", "grid"],
+                    items: items,
+                    title: "Playlists",
+                    icon: "fa fa-folder-open-o"
+                }
+            ]
+        }
+    }
+    return libQ.resolve(resp);
+};
+
 napster.prototype.handleBrowseUri = async function (curUri) {
     const self = this;
     let response;
@@ -383,6 +431,8 @@ napster.prototype.handleBrowseUri = async function (curUri) {
             response = await self.browseAlbums();
         } else if (curUri.startsWith('napster/tracks')) {
             response = await self.browseTracks();
+        } else if (curUri.startsWith('napster/playlists')) {
+            response = await self.browsePlaylists();
         }
     }
 
@@ -468,7 +518,7 @@ napster.prototype.pause = function () {
 };
 
 napster.prototype.resume = function() {
-    var self = this;
+    const self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::resume');
     return self.mpdPlugin.resume()
         .then(function() {
@@ -480,7 +530,7 @@ napster.prototype.resume = function() {
 }
 
 napster.prototype.prefetch = function(nextTrack) {
-    var self = this;
+    const self = this;
     self.commandRouter.pushConsoleMessage('[' + Date.now() + '] ' + 'napster::prefetch');
 
     self.getStreamUrl(nextTrack).then(r => {
@@ -527,6 +577,44 @@ napster.prototype.explodeUri = function (uri) {
         }).then(function (response) {
             if (response.data.tracks.length > 0) defer.resolve(self.parseNapsterTrack(response.data.tracks[0]));
             else defer.reject(new Error('napster track not found'));
+        });
+    } else if (uri.startsWith('napster/album')) {
+        axios.get('https://api.napster.com/v2.2/albums/' + uri.split('/')[2] + "/tracks", {
+            headers: {
+                "Apikey": apiKey,
+                "User-Agent": userAgent,
+                'X-Px-Authorization': '3'
+            }
+        }).then(function (response) {
+            if (response.data.albums.length > 0) {
+                let album = response.data.albums[0];
+                let tracks = [];
+                for (let track of album.tracks) {
+                    tracks.push(self.parseNapsterTrack(track))
+                }
+                defer.resolve(tracks);
+            } else {
+                defer.reject(new Error('napster album not found'));
+            }
+        });
+    } else if (uri.startsWith('napster/playlist')) {
+        // TODO: handle 200 max limit with offset
+        axios.get('/v2.2/me/library/playlists/' + uri.split('/')[2] + "/tracks?limit=200&offset=0&rights=0", {
+            headers: {
+                'Authorization': 'Bearer ' + self.config.get('access_token'),
+                "User-Agent": userAgent,
+                'X-Px-Authorization': '3'
+            }
+        }).then(function (response) {
+            if (response.data.tracks.length > 0) {
+                let tracks = [];
+                for (let track of response.data.tracks) {
+                    tracks.push(self.parseNapsterTrack(track))
+                }
+                defer.resolve(tracks);
+            } else {
+                defer.reject(new Error('napster playlist not found'));
+            }
         });
     } else {
         //TODO: support other types?
