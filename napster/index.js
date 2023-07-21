@@ -286,7 +286,7 @@ napster.prototype.browsePlaylists = async function () {
             title: playlist.name,
             artist: creator.data["members"][0]["realName"],
             album: "",
-            albumart: playlist.images.url,
+            albumart: playlist.images[0].url,
             uri: 'napster/playlist/' + playlist.id
         })
     }
@@ -569,7 +569,7 @@ napster.prototype.explodeUri = function (uri) {
     const self = this;
     const defer = libQ.defer();
     if (uri.startsWith('napster/track')) {
-        axios.get('https://api.napster.com/v2.2/tracks/' + uri.split('/')[2], {
+        axios.get(apiUrl + '/v2.2/tracks/' + uri.split('/')[2], {
             headers: {
                 "Apikey": apiKey,
                 "User-Agent": userAgent,
@@ -580,7 +580,7 @@ napster.prototype.explodeUri = function (uri) {
             else defer.reject(new Error('napster track not found'));
         });
     } else if (uri.startsWith('napster/album')) {
-        axios.get('https://api.napster.com/v2.2/albums/' + uri.split('/')[2] + "/tracks", {
+        axios.get(apiUrl + 'v2.2/albums/' + uri.split('/')[2] + "/tracks", {
             headers: {
                 "Apikey": apiKey,
                 "User-Agent": userAgent,
@@ -600,7 +600,7 @@ napster.prototype.explodeUri = function (uri) {
         });
     } else if (uri.startsWith('napster/playlist')) {
         // TODO: handle 200 max limit with offset
-        axios.get('/v2.2/me/library/playlists/' + uri.split('/')[2] + "/tracks?limit=200&offset=0&rights=0", {
+        axios.get(apiUrl + '/v2.2/me/library/playlists/' + uri.split('/')[2] + "/tracks?limit=200&offset=0&rights=0", {
             headers: {
                 'Authorization': 'Bearer ' + self.config.get('access_token'),
                 "User-Agent": userAgent,
