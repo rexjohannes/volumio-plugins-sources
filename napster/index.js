@@ -185,6 +185,39 @@ napster.prototype.addToBrowseSources = function () {
     this.commandRouter.volumioAddToBrowseSources(data);
 };
 
+napster.prototype.browseTracks = async function () {
+    const self = this;
+    // &lang=en_US
+    // TODO: limit, language
+    let response = await axios.get(apiUrl + '/v2.2/me/library/tracks?limit=200&offset=0&rights=2', {
+        headers: {
+            'Authorization': 'Bearer ' + self.config.get('access_token'),
+            'User-Agent': userAgent,
+            'X-Px-Authorization': '3'
+        }
+    })
+    let items = [];
+    for (let track of response.data.tracks) {
+        items.push(self.parseNapsterTrack(track))
+    }
+    let resp = {
+        navigation: {
+            prev: {
+                uri: "napster"
+            },
+            lists: [
+                {
+                    availableListViews: ["list", "grid"],
+                    items: items,
+                    title: "Tracks",
+                    icon: "fa fa-folder-open-o"
+                }
+            ]
+        }
+    }
+    return libQ.resolve(resp);
+};
+
 napster.prototype.browseAlbums = async function () {
     const self = this;
     // &lang=en_US
@@ -232,6 +265,7 @@ napster.prototype.handleBrowseUri = async function (curUri) {
 
     if (curUri.startsWith('napster')) {
         if (curUri === 'napster') {
+            // TODO: station support https://web.archive.org/web/20230205095343/https://developer.prod.napster.com/api/v2.2#stations
             response = libQ.resolve({
                 navigation: {
                     prev: {
@@ -347,6 +381,8 @@ napster.prototype.handleBrowseUri = async function (curUri) {
             });
         } else if (curUri.startsWith('napster/albums')) {
             response = await self.browseAlbums();
+        } else if (curUri.startsWith('napster/tracks')) {
+            response = await self.browseTracks();
         }
     }
 
