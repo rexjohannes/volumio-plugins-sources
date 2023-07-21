@@ -263,7 +263,8 @@ napster.prototype.browsePlaylists = async function () {
     const self = this;
     // &lang=en_US
     // TODO: limit
-    let response = await axios.get(apiUrl + '/v2.2/me/search/playlists?include_private=true&limit=50&offset=0&sampleArtists=verbose&sort=modified_date&source=my_favorite_playlists,my_own_playlists', {
+    // my_own_playlists
+    let response = await axios.get(apiUrl + '/v2.2/me/search/playlists?include_private=true&limit=50&offset=0&sampleArtists=verbose&sort=modified_date&source=my_favorite_playlists', {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
             'User-Agent': userAgent,
