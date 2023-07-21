@@ -284,7 +284,7 @@ napster.prototype.browsePlaylists = async function () {
             service: 'napster',
             type: 'playlist',
             title: playlist.name,
-            artist: creator["members"][0]["realName"],
+            artist: creator.data["members"][0]["realName"],
             album: "",
             albumart: playlist.images.url,
             uri: 'napster/playlist/' + playlist.id
