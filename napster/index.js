@@ -129,6 +129,7 @@ napster.prototype.login = async function (email, password) {
         self.config.set('refresh_token', resp['refresh_token']);
         self.config.set('expires_at', Date.now() + resp['expires_in'] * 1000);
         self.config.set('catalog', resp['catalog']);
+        // TODO: remove message
         self.commandRouter.pushToastMessage('success', "Logged in", 'Successfully logged in to Napster');
     }).catch(function () {
         self.commandRouter.pushToastMessage('error', "Error", 'Could not log in to Napster');
@@ -164,7 +165,7 @@ napster.prototype.refreshToken = async function () {
 napster.prototype.getStreamUrl = async function (track) {
     const self = this;
     if (self.config.get('expires_at') < Date.now() + 60 * 60 * 1000) await self.refreshToken();
-    let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=' + track.bitdepth + '&bitrate=' + track.bitrate + '&format=' + encodeURI(track.format) + '&id=' + track.id + '&sampleRate=' + track.samplerate, {
+    let resp = await axios.get(apiUrl + '/v3/streams/tracks?bitDepth=' + track.format.sampleBits + '&bitrate=' + track.format.bitrate + '&format=' + encodeURI(track.format.name) + '&id=' + track.id + '&sampleRate=' + track.format.sampleRate, {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
             'User-Agent': userAgent,
@@ -189,6 +190,7 @@ napster.prototype.browseTracks = async function () {
     const self = this;
     // &lang=en_US
     // TODO: limit, language
+    if (self.config.get('expires_at') < Date.now() + 60 * 60 * 1000) await self.refreshToken();
     let response = await axios.get(apiUrl + '/v2.2/me/library/tracks?limit=200&offset=0&rights=2', {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
@@ -222,6 +224,7 @@ napster.prototype.browseAlbums = async function () {
     const self = this;
     // &lang=en_US
     // TODO: limit, language
+    if (self.config.get('expires_at') < Date.now() + 60 * 60 * 1000) await self.refreshToken();
     let response = await axios.get(apiUrl + '/v2.2/me/library/albums?limit=20&offset=0&rights=2', {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
@@ -264,6 +267,7 @@ napster.prototype.browsePlaylists = async function () {
     // &lang=en_US
     // TODO: limit
     // my_own_playlists
+    if (self.config.get('expires_at') < Date.now() + 60 * 60 * 1000) await self.refreshToken();
     let response = await axios.get(apiUrl + '/v2.2/me/search/playlists?include_private=true&limit=50&offset=0&sampleArtists=verbose&sort=modified_date&source=my_favorite_playlists', {
         headers: {
             'Authorization': 'Bearer ' + self.config.get('access_token'),
@@ -286,7 +290,8 @@ napster.prototype.browsePlaylists = async function () {
             title: playlist.name,
             artist: creator.data["members"][0]["realName"],
             album: "",
-            albumart: playlist.images[0].url,
+            // TODO: configurable size
+            albumart: apiUrl + "/imageserver/v2/playlists/" + playlist.id + "/albums/images/1200x400.jpg?montage=3x1",
             uri: 'napster/playlist/' + playlist.id
         })
     }
@@ -600,6 +605,7 @@ napster.prototype.explodeUri = function (uri) {
         });
     } else if (uri.startsWith('napster/playlist')) {
         // TODO: handle 200 max limit with offset
+        // TODO: check if access_token is valid
         axios.get(apiUrl + '/v2.2/me/library/playlists/' + uri.split('/')[2] + "/tracks?limit=200&offset=0&rights=0", {
             headers: {
                 'Authorization': 'Bearer ' + self.config.get('access_token'),
@@ -672,6 +678,7 @@ napster.prototype.getAlbumImg = function (id) {
 napster.prototype.search = function (query) {
     const self = this;
     const defer = libQ.defer();
+    // TODO: other types
     // TODO: configurable per_type_limit
     // &lang=en_US &rights=2
     axios.get(apiUrl + '/v2.2/search?catalog=' + self.config.get('catalog') + '&offset=0&per_type_limit=30&query=' + encodeURI(query.value.toLowerCase()) + '&rights=2&type=album,artist,track,playlist', {
@@ -717,9 +724,9 @@ napster.prototype.parseNapsterTrack = function (data) {
         uri: 'napster/track/' + data["id"],
         id: data["id"],
         bitrate: selected["bitrate"],
-        format: selected["name"],
-        bitdepth: selected["sampleBits"],
-        samplerate: selected["sampleRate"],
+        format: {name: selected["name"], sampleBits: selected["sampleBits"], sampleRate: selected["sampleRate"], bitrate: selected["bitrate"]},
+        bitdepth: selected["sampleBits"] + " bit",
+        samplerate: selected["sampleRate"] / 1000 + " kHz",
         trackType: (selected["name"].toLowerCase().startsWith("aac")) ? "aac" : selected["name"].toLowerCase(),
     };
 }
